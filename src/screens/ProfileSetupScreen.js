@@ -11,11 +11,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, EXAMS, radius, spacing, typography } from '../theme';
 import { PrimaryButton, SecondaryButton, Card, FieldLabel, Chip, Avatar } from '../components/ui';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import CalendarPicker, { formatExamDate } from '../components/CalendarPicker';
+import TimePicker, { formatExamTime, to24Hour } from '../components/TimePicker';
 
 const GENDERS = [
   { key: 'female', label: 'Female' },
@@ -42,6 +45,14 @@ export default function ProfileSetupScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [addingCenter, setAddingCenter] = useState(false);
+  const [examDate, setExamDate] = useState(
+    user?.examDate ? new Date(user.examDate) : null
+  );
+  const [examTime, setExamTime] = useState(
+    user?.examTime?.hour ? user.examTime : null
+  );
+  const [dateModalVisible, setDateModalVisible] = useState(false);
+  const [timeModalVisible, setTimeModalVisible] = useState(false);
   const debounce = useRef(null);
 
   useEffect(() => {
@@ -82,6 +93,10 @@ export default function ProfileSetupScreen() {
       setError('Please type your exam name in the box below "Other"');
       return;
     }
+    if (examTime && !examDate) {
+      setError('You picked an exam timing — please select the exam date too');
+      return;
+    }
     if (!selectedCenter) {
       setError(
         'Please TAP your exam center in the list below — typing alone does not select it'
@@ -90,12 +105,21 @@ export default function ProfileSetupScreen() {
     }
     setSaving(true);
     try {
+      let examDateIso;
+      if (examDate) {
+        const combined = new Date(examDate);
+        const { h, m } = to24Hour(examTime || { hour: 9, minute: 0, period: 'AM' });
+        combined.setHours(h, m, 0, 0);
+        examDateIso = combined.toISOString();
+      }
       const res = await api.completeProfile({
         name,
         gender,
         homeCity,
         exam,
         examCenterId: selectedCenter._id,
+        examDate: examDateIso,
+        examTime: examTime || undefined,
         rollNumber: rollNumber.trim() || undefined,
       });
       await updateUser(res.user);
@@ -234,6 +258,43 @@ export default function ProfileSetupScreen() {
           </Card>
 
           <Card style={{ marginBottom: spacing.md }}>
+            <FieldLabel>Exam date &amp; timing</FieldLabel>
+            <View style={{ flexDirection: 'row' }}>
+              <TouchableOpacity
+                style={[styles.pickerInput, { flex: 1, marginRight: spacing.sm }]}
+                onPress={() => setDateModalVisible(true)}
+              >
+                <MaterialCommunityIcons name="calendar" size={18} color={colors.primary} />
+                <Text
+                  style={[styles.pickerText, !examDate && styles.pickerPlaceholder]}
+                  numberOfLines={1}
+                >
+                  {examDate ? formatExamDate(examDate) : 'Exam date'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.pickerInput, { flex: 1 }]}
+                onPress={() => setTimeModalVisible(true)}
+              >
+                <MaterialCommunityIcons name="clock-outline" size={18} color={colors.primary} />
+                <Text
+                  style={[styles.pickerText, !examTime && styles.pickerPlaceholder]}
+                  numberOfLines={1}
+                >
+                  {examTime ? formatExamTime(examTime) : 'Timing'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {examDate || examTime ? (
+              <TouchableOpacity onPress={() => { setExamDate(null); setExamTime(null); }}>
+                <Text style={styles.changeText}>Clear date &amp; timing</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.hint}>As written on your admit card — helps us find same-day matches</Text>
+            )}
+          </Card>
+
+          <Card style={{ marginBottom: spacing.md }}>
             <FieldLabel>Exam center (as on admit card)</FieldLabel>
             {selectedCenter ? (
               <View style={styles.selectedCenter}>
@@ -327,6 +388,20 @@ export default function ProfileSetupScreen() {
 
           <PrimaryButton title="Start connecting" onPress={save} loading={saving} />
         </ScrollView>
+        <CalendarPicker
+          visible={dateModalVisible}
+          value={examDate}
+          onChange={setExamDate}
+          onClose={() => setDateModalVisible(false)}
+          title="Select exam date"
+        />
+        <TimePicker
+          visible={timeModalVisible}
+          value={examTime}
+          onChange={setExamTime}
+          onClose={() => setTimeModalVisible(false)}
+          title="Select exam timing"
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -376,4 +451,22 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   selectedExamText: { color: colors.primary, fontWeight: '700', fontSize: 14 },
+  pickerInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.bg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    marginBottom: spacing.md,
+  },
+  pickerText: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    fontSize: 15,
+    color: colors.text,
+  },
+  pickerPlaceholder: { color: colors.textMuted },
 });
