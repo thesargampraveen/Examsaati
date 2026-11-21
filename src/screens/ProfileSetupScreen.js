@@ -29,6 +29,10 @@ export default function ProfileSetupScreen() {
   const [gender, setGender] = useState(user?.gender || '');
   const [homeCity, setHomeCity] = useState(user?.homeCity || '');
   const [exam, setExam] = useState(user?.exam || '');
+  const [selectedExamChip, setSelectedExamChip] = useState(
+    EXAMS.includes(user?.exam) ? user?.exam : user?.exam ? 'Other' : ''
+  );
+  const [examSearch, setExamSearch] = useState('');
   const [rollNumber, setRollNumber] = useState('');
   const [centerQuery, setCenterQuery] = useState('');
   const [centers, setCenters] = useState([]);
@@ -69,8 +73,12 @@ export default function ProfileSetupScreen() {
       setError('Please select your gender (tap one of Female / Male / Other)');
       return;
     }
-    if (!exam) {
+    if (!selectedExamChip) {
       setError('Please select your exam (tap one of JEE Main, NEET, UPSC…)');
+      return;
+    }
+    if (selectedExamChip === 'Other' && !exam.trim()) {
+      setError('Please type your exam name in the box below "Other"');
       return;
     }
     if (!selectedCenter) {
@@ -171,11 +179,57 @@ export default function ProfileSetupScreen() {
 
           <Card style={{ marginBottom: spacing.md }}>
             <FieldLabel>Which exam?</FieldLabel>
+            <TextInput
+              style={styles.input}
+              value={examSearch}
+              onChangeText={setExamSearch}
+              placeholder="Search exam (e.g. NEET)…"
+              placeholderTextColor={colors.textMuted}
+            />
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-              {EXAMS.map((e) => (
-                <Chip key={e} label={e} active={exam === e} onPress={() => setExam(e)} />
+              {EXAMS.filter((e) =>
+                e.toLowerCase().includes(examSearch.trim().toLowerCase())
+              ).map((e) => (
+                <Chip
+                  key={e}
+                  label={e}
+                  active={selectedExamChip === e}
+                  onPress={() => {
+                    setSelectedExamChip(e);
+                    setExam(e === 'Other' ? '' : e);
+                    setExamSearch('');
+                  }}
+                  style={{ marginRight: spacing.sm, marginBottom: spacing.sm }}
+                />
               ))}
+              {examSearch.trim() &&
+              !EXAMS.some((e) =>
+                e.toLowerCase().includes(examSearch.trim().toLowerCase())
+              ) ? (
+                <Text style={styles.hint}>No match — select "Other" and type it below</Text>
+              ) : null}
             </View>
+            {selectedExamChip === 'Other' ? (
+              <>
+                <TextInput
+                  style={styles.input}
+                  value={exam}
+                  onChangeText={(t) => setExam(t.slice(0, 40))}
+                  placeholder="Type your exam name (e.g. CUET, CAT)…"
+                  placeholderTextColor={colors.textMuted}
+                  autoFocus
+                />
+                {exam.trim() ? (
+                  <View style={styles.selectedExamTag}>
+                    <Text style={styles.selectedExamText}>Selected: {exam.trim()}</Text>
+                  </View>
+                ) : null}
+              </>
+            ) : selectedExamChip ? (
+              <View style={styles.selectedExamTag}>
+                <Text style={styles.selectedExamText}>Selected: {exam}</Text>
+              </View>
+            ) : null}
           </Card>
 
           <Card style={{ marginBottom: spacing.md }}>
@@ -305,4 +359,13 @@ const styles = StyleSheet.create({
   changeText: { color: colors.primary, fontWeight: '700', fontSize: 14 },
   hint: { ...typography.muted, marginTop: spacing.sm },
   emptyText: { ...typography.muted, paddingVertical: spacing.md },
+  selectedExamTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  selectedExamText: { color: colors.primary, fontWeight: '700', fontSize: 14 },
 });

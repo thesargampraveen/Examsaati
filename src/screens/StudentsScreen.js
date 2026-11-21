@@ -106,8 +106,11 @@ export default function StudentsScreen({ navigation }) {
         <Text style={styles.headerTitle}>Students at your center</Text>
         <Text style={styles.headerSub}>
           {user?.examCenter?.name || user?.examCenter
-            ? (user.examCenter?.name ?? 'Your center')
+            ? `${user.examCenter?.name ?? 'Your center'} · ${user?.exam || ''}`
             : 'Select your center in profile setup'}
+        </Text>
+        <Text style={styles.headerNote}>
+          Showing only students with the same exam AND same center
         </Text>
       </View>
 
@@ -116,9 +119,10 @@ export default function StudentsScreen({ navigation }) {
       ) : students.length === 0 ? (
         <View style={styles.empty}>
           <MaterialCommunityIcons name="account-group-outline" size={48} color={colors.textMuted} style={styles.emptyIcon} />
-          <Text style={styles.emptyTitle}>No students yet</Text>
+          <Text style={styles.emptyTitle}>No matching students yet</Text>
           <Text style={styles.emptyText}>
-            As more verified students join your exam center, they will show up here.
+            Only students with the same exam AND same exam center appear here. As more of
+            them join, they will show up in this list.
           </Text>
         </View>
       ) : (
@@ -145,6 +149,7 @@ const styles = StyleSheet.create({
   header: { backgroundColor: colors.primary, padding: spacing.xl, paddingBottom: spacing.lg },
   headerTitle: { fontSize: 22, fontWeight: '800', color: colors.white },
   headerSub: { fontSize: 13, color: colors.primaryLight, marginTop: 2 },
+  headerNote: { fontSize: 11, color: colors.primaryLight, marginTop: 4, opacity: 0.85 },
   card: { marginBottom: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center' },
   name: { fontSize: 16, fontWeight: '700', color: colors.text },
