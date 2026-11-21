@@ -28,6 +28,7 @@ export default function ProfileSetupScreen() {
   const [name, setName] = useState(user?.name || '');
   const [gender, setGender] = useState(user?.gender || '');
   const [homeCity, setHomeCity] = useState(user?.homeCity || '');
+  const [centerCity, setCenterCity] = useState('');
   const [exam, setExam] = useState(user?.exam || '');
   const [selectedExamChip, setSelectedExamChip] = useState(
     EXAMS.includes(user?.exam) ? user?.exam : user?.exam ? 'Other' : ''
@@ -111,9 +112,9 @@ export default function ProfileSetupScreen() {
       setError('Type the full center name first, then tap "Add it"');
       return;
     }
-    const cCity = homeCity.trim();
+    const cCity = centerCity.trim();
     if (!cCity) {
-      setError('Enter your city above first — the center is created there');
+      setError('Enter the CENTER city below ');
       return;
     }
     setAddingCenter(true);
@@ -254,6 +255,13 @@ export default function ProfileSetupScreen() {
                   value={centerQuery}
                   onChangeText={setCenterQuery}
                   placeholder="Search center name, city or code…"
+                  placeholderTextColor={colors.textMuted}
+                />
+                <TextInput
+                  style={styles.input}
+                  value={centerCity}
+                  onChangeText={(t) => setCenterCity(t.slice(0, 40))}
+                  placeholder="Center's city "
                   placeholderTextColor={colors.textMuted}
                 />
                 {searching ? (

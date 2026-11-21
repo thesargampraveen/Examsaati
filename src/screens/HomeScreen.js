@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, shadow, spacing, typography } from '../theme';
@@ -60,7 +60,7 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      <View style={styles.body}>
+      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false}>
         {/* I reached — the hero action */}
         <View style={styles.reachCard}>
           <Text style={styles.reachTitle}>Reached the exam center?</Text>
@@ -135,7 +135,7 @@ export default function HomeScreen({ navigation }) {
             carry a printed admit card plus a photo ID.
           </Text>
         </Card>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -168,7 +168,10 @@ const styles = StyleSheet.create({
     marginTop: -spacing.sm,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
+  },
+  bodyContent: {
     padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   reachCard: {
     backgroundColor: colors.surface,
