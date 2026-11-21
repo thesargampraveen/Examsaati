@@ -66,10 +66,10 @@ export const EXAMS = [
 ];
 
 export const CATEGORY_META = {
-  route: { label: 'Route', icon: '🛣️' },
-  entry_gate: { label: 'Entry Gate', icon: '🚪' },
-  food: { label: 'Food', icon: '🍛' },
-  stay: { label: 'Stay', icon: '🏨' },
-  carry: { label: 'Carry', icon: '🎒' },
-  other: { label: 'Other', icon: '💡' },
+  route: { label: 'Route', icon: 'road-variant' },
+  entry_gate: { label: 'Entry Gate', icon: 'door-open' },
+  food: { label: 'Food', icon: 'food' },
+  stay: { label: 'Stay', icon: 'bed' },
+  carry: { label: 'Carry', icon: 'bag-personal-outline' },
+  other: { label: 'Other', icon: 'lightbulb-on-outline' },
 };

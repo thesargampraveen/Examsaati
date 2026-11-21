@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, shadow, spacing, typography } from '../theme';
 import { Card, PrimaryButton, SecondaryButton } from '../components/ui';
@@ -14,7 +15,7 @@ export default function HomeScreen({ navigation }) {
     setReaching(true);
     try {
       const res = await api.reached();
-      Alert.alert('✅ You marked "I reached"', res.message);
+      Alert.alert('You marked "I reached"', res.message);
     } catch (err) {
       if (err.data?.needsGuardian) {
         Alert.alert(
@@ -45,11 +46,16 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>{greeting()},</Text>
-          <Text style={styles.userName}>{user?.name || 'Saathi'} 👋</Text>
+          <Text style={styles.userName}>{user?.name || 'Saathi'}</Text>
         </View>
         <View style={styles.verifiedBadge}>
+          <MaterialCommunityIcons
+            name={user?.verificationStatus === 'verified' ? 'check-circle-outline' : 'timer-sand'}
+            size={14}
+            color={colors.white}
+          />
           <Text style={styles.verifiedText}>
-            {user?.verificationStatus === 'verified' ? '✓ Verified' : '⏳ Pending'}
+            {user?.verificationStatus === 'verified' ? ' Verified' : ' Pending'}
           </Text>
         </View>
       </View>
@@ -63,7 +69,8 @@ export default function HomeScreen({ navigation }) {
             arrived safely.
           </Text>
           <PrimaryButton
-            title="🛡️  I reached safely"
+            title="I reached safely"
+            icon="shield-check-outline"
             onPress={markReached}
             loading={reaching}
             style={{ backgroundColor: colors.accent, marginTop: spacing.lg }}
@@ -82,12 +89,14 @@ export default function HomeScreen({ navigation }) {
               </Text>
               <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg }}>
                 <SecondaryButton
-                  title="📖 Center guide"
+                  title="Center guide"
+                  icon="book-open-variant"
                   style={{ flex: 1 }}
                   onPress={() => navigation.navigate('CenterGuide')}
                 />
                 <SecondaryButton
-                  title="👥 Students"
+                  title="Students"
+                  icon="account-group-outline"
                   style={{ flex: 1 }}
                   onPress={() => navigation.navigate('Students')}
                 />
@@ -103,21 +112,24 @@ export default function HomeScreen({ navigation }) {
         {/* Quick actions */}
         <View style={styles.quickRow}>
           <Card style={[styles.quickCard]}>
-            <Text style={styles.quickIcon}>🧳</Text>
+            <MaterialCommunityIcons name="bag-suitcase-outline" size={26} color={colors.primary} style={styles.quickIcon} />
             <Text style={styles.quickLabel}>Travel partners</Text>
           </Card>
           <Card style={styles.quickCard}>
-            <Text style={styles.quickIcon}>🏨</Text>
+            <MaterialCommunityIcons name="bed-outline" size={26} color={colors.primary} style={styles.quickIcon} />
             <Text style={styles.quickLabel}>Stay sharing</Text>
           </Card>
           <Card style={styles.quickCard}>
-            <Text style={styles.quickIcon}>💬</Text>
+            <MaterialCommunityIcons name="message-text-outline" size={26} color={colors.primary} style={styles.quickIcon} />
             <Text style={styles.quickLabel}>Chats</Text>
           </Card>
         </View>
 
         <Card style={styles.tipCard}>
-          <Text style={styles.tipTitle}>💡 Exam day tip</Text>
+          <View style={styles.tipTitleRow}>
+            <MaterialCommunityIcons name="lightbulb-on-outline" size={16} color={colors.primaryDark} />
+            <Text style={styles.tipTitle}> Exam day tip</Text>
+          </View>
           <Text style={styles.tipText}>
             Visit your center a day early if you can. Note the entry gate, nearest food spot and
             carry a printed admit card plus a photo ID.
@@ -146,6 +158,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   verifiedText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   body: {
@@ -173,8 +187,9 @@ const styles = StyleSheet.create({
   centerMeta: { ...typography.secondary, marginTop: 2 },
   quickRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg },
   quickCard: { flex: 1, alignItems: 'center', paddingVertical: spacing.lg },
-  quickIcon: { fontSize: 26, marginBottom: spacing.xs },
+  quickIcon: { marginBottom: spacing.xs },
   quickLabel: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+  tipTitleRow: { flexDirection: 'row', alignItems: 'center' },
   tipCard: { marginTop: spacing.lg, backgroundColor: colors.primaryLight, borderColor: colors.primaryLight },
   tipTitle: { fontSize: 14, fontWeight: '800', color: colors.primaryDark },
   tipText: { ...typography.secondary, marginTop: spacing.sm },

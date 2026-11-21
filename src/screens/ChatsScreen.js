@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, radius, spacing, typography } from '../theme';
@@ -87,7 +88,7 @@ export default function ChatsScreen({ navigation }) {
         <Text style={styles.preview} numberOfLines={1}>
           {item.lastMessage
             ? `${item.lastMessage.sender === item.friend._id ? '' : 'You: '}${item.lastMessage.text}`
-            : `Say hi to ${item.friend.name?.split(' ')[0] || 'your saathi'} 👋`}
+            : `Say hi to ${item.friend.name?.split(' ')[0] || 'your saathi'}`}
         </Text>
       </View>
     </TouchableOpacity>
@@ -123,7 +124,7 @@ export default function ChatsScreen({ navigation }) {
           }
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>💬</Text>
+              <MaterialCommunityIcons name="message-text-outline" size={48} color={colors.textMuted} style={styles.emptyIcon} />
               <Text style={styles.emptyTitle}>No chats yet</Text>
               <Text style={styles.emptyText}>
                 Connect with students at your center to start chatting.
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
   },
   actionText: { color: colors.white, fontWeight: '700', fontSize: 14 },
   empty: { alignItems: 'center', padding: spacing.xxl, marginTop: spacing.xxl },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+  emptyIcon: { marginBottom: spacing.md },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
   emptyText: { ...typography.secondary, textAlign: 'center', marginTop: spacing.sm },
 });

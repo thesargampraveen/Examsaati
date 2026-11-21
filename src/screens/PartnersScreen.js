@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '../theme';
 import { Avatar, Card } from '../components/ui';
@@ -8,8 +9,8 @@ import { useAuth } from '../context/AuthContext';
 import ReportBlockSheet from '../components/ReportBlockSheet';
 
 const TABS = [
-  { key: 'travel', label: '🧳 Travel partners' },
-  { key: 'stay', label: '🏨 Stay sharing' },
+  { key: 'travel', label: 'Travel partners', icon: 'bag-suitcase-outline' },
+  { key: 'stay', label: 'Stay sharing', icon: 'bed-outline' },
 ];
 
 const GENDER_FILTERS = [
@@ -72,6 +73,12 @@ export default function PartnersScreen() {
               onPress={() => setTab(t.key)}
               style={[styles.tab, tab === t.key && styles.tabActive]}
             >
+              <MaterialCommunityIcons
+                name={t.icon}
+                size={15}
+                color={tab === t.key ? colors.primary : colors.primaryLight}
+                style={styles.tabIcon}
+              />
               <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>
                 {t.label}
               </Text>
@@ -88,13 +95,21 @@ export default function PartnersScreen() {
                 (g.key === 'same') === sameGenderOnly && styles.filterChipActive,
               ]}
             >
+              {g.key === 'same' ? (
+                <MaterialCommunityIcons
+                  name="shield-check-outline"
+                  size={14}
+                  color={(g.key === 'same') === sameGenderOnly ? colors.primary : colors.primaryLight}
+                  style={styles.filterIcon}
+                />
+              ) : null}
               <Text
                 style={[
                   styles.filterText,
                   (g.key === 'same') === sameGenderOnly && styles.filterTextActive,
                 ]}
               >
-                🛡️ {g.label}
+                {g.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -105,7 +120,12 @@ export default function PartnersScreen() {
         <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.primary} />
       ) : partners.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>{tab === 'travel' ? '🧳' : '🏨'}</Text>
+          <MaterialCommunityIcons
+            name={tab === 'travel' ? 'bag-suitcase-outline' : 'bed-outline'}
+            size={48}
+            color={colors.textMuted}
+            style={styles.emptyIcon}
+          />
           <Text style={styles.emptyTitle}>No matches yet</Text>
           <Text style={styles.emptyText}>
             {tab === 'travel'
@@ -131,9 +151,12 @@ export default function PartnersScreen() {
                     {item.homeCity ? ` · from ${item.homeCity}` : ''}
                   </Text>
                   {item.examCenter?.name ? (
-                    <Text style={styles.meta}>
-                      → {item.examCenter.name}, {item.examCenter.city}
-                    </Text>
+                    <View style={styles.centerRow}>
+                      <MaterialCommunityIcons name="arrow-right" size={13} color={colors.textSecondary} style={styles.centerArrow} />
+                      <Text style={styles.meta}>
+                        {item.examCenter.name}, {item.examCenter.city}
+                      </Text>
+                    </View>
                   ) : null}
                 </View>
                 <TouchableOpacity onPress={() => setReportTarget(item)}>
@@ -144,8 +167,11 @@ export default function PartnersScreen() {
                 style={[styles.connectBtn, sentTo[item._id] && styles.connectBtnDone]}
                 onPress={() => !sentTo[item._id] && connect(item)}
               >
+                {sentTo[item._id] ? (
+                  <MaterialCommunityIcons name="check" size={16} color={colors.primary} style={styles.connectIcon} />
+                ) : null}
                 <Text style={[styles.connectText, sentTo[item._id] && styles.connectTextDone]}>
-                  {sentTo[item._id] ? 'Request sent ✓' : 'Connect'}
+                  {sentTo[item._id] ? 'Request sent' : 'Connect'}
                 </Text>
               </TouchableOpacity>
             </Card>
@@ -168,11 +194,14 @@ const styles = StyleSheet.create({
   header: { backgroundColor: colors.primary, padding: spacing.xl, paddingBottom: spacing.lg },
   headerTitle: { fontSize: 22, fontWeight: '800', color: colors.white, marginBottom: spacing.md },
   tabs: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: radius.full, padding: 4 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: radius.full, alignItems: 'center' },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: radius.full, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
   tabActive: { backgroundColor: colors.white },
+  tabIcon: { marginRight: 5 },
   tabText: { color: colors.primaryLight, fontSize: 13, fontWeight: '700' },
   tabTextActive: { color: colors.primary },
   filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radius.full,
@@ -180,11 +209,14 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   filterChipActive: { backgroundColor: colors.white },
+  filterIcon: { marginRight: 4 },
   filterText: { fontSize: 12, fontWeight: '600', color: colors.primaryLight },
   filterTextActive: { color: colors.primary },
   card: { marginBottom: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center' },
   name: { fontSize: 16, fontWeight: '700', color: colors.text },
+  centerRow: { flexDirection: 'row', alignItems: 'center' },
+  centerArrow: { marginRight: 3 },
   meta: { fontSize: 13, color: colors.textSecondary, marginTop: 1 },
   reportLink: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
   connectBtn: {
@@ -193,12 +225,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingVertical: 10,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   connectBtnDone: { backgroundColor: colors.primaryLight },
+  connectIcon: { marginRight: 4 },
   connectText: { color: colors.white, fontWeight: '700', fontSize: 14 },
   connectTextDone: { color: colors.primary },
   empty: { alignItems: 'center', padding: spacing.xxl, marginTop: spacing.xxl },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+  emptyIcon: { marginBottom: spacing.md },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
   emptyText: { ...typography.secondary, textAlign: 'center', marginTop: spacing.sm, paddingHorizontal: spacing.xl },
 });

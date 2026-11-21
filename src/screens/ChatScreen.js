@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
@@ -10,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../theme';
 import { Avatar } from '../components/ui';
@@ -64,7 +66,7 @@ export default function ChatScreen({ route, navigation }) {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>←</Text>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} style={styles.backArrow} />
         </TouchableOpacity>
         <Avatar name={friend.name} color={friend.avatarColor} size={38} />
         <View style={{ flex: 1, marginLeft: spacing.md }}>
@@ -84,9 +86,12 @@ export default function ChatScreen({ route, navigation }) {
         <View style={{ flex: 1 }}>
           {messages.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyText}>
-                Start the conversation — wish them luck for {friend.exam || 'the exam'}! 🍀
-              </Text>
+              <View style={styles.emptyTextRow}>
+                <Text style={styles.emptyText}>
+                  Start the conversation — wish them luck for {friend.exam || 'the exam'}!
+                </Text>
+                <MaterialCommunityIcons name="clover" size={16} color={colors.accent} />
+              </View>
             </View>
           ) : null}
           <FlatList
@@ -125,7 +130,11 @@ export default function ChatScreen({ route, navigation }) {
             maxLength={2000}
           />
           <TouchableOpacity style={styles.sendBtn} onPress={send} disabled={sending}>
-            <Text style={styles.sendText}>{sending ? '…' : '➤'}</Text>
+            {sending ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <MaterialCommunityIcons name="send" size={20} color={colors.white} />
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -149,7 +158,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     paddingHorizontal: spacing.lg,
   },
-  backArrow: { color: colors.white, fontSize: 26, marginRight: spacing.md, paddingHorizontal: 6 },
+  backArrow: { marginRight: spacing.md, paddingHorizontal: 6 },
   name: { color: colors.white, fontWeight: '700', fontSize: 16 },
   meta: { color: colors.primaryLight, fontSize: 12 },
   reportLink: { color: colors.primaryLight, fontSize: 12, fontWeight: '600' },
@@ -193,7 +202,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendText: { color: colors.white, fontSize: 18 },
   empty: { alignItems: 'center', padding: spacing.xl },
+  emptyTextRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center' },
 });

@@ -1,8 +1,9 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, radius, shadow, spacing } from '../theme';
 
-export function PrimaryButton({ title, onPress, loading, disabled, style }) {
+export function PrimaryButton({ title, onPress, loading, disabled, style, icon }) {
   const isDisabled = disabled || loading;
   return (
     <TouchableOpacity
@@ -14,20 +15,40 @@ export function PrimaryButton({ title, onPress, loading, disabled, style }) {
       {loading ? (
         <ActivityIndicator color={colors.white} />
       ) : (
-        <Text style={styles.primaryText}>{title}</Text>
+        <View style={styles.btnContent}>
+          {icon ? (
+            <MaterialCommunityIcons
+              name={icon}
+              size={18}
+              color={colors.white}
+              style={styles.btnIcon}
+            />
+          ) : null}
+          <Text style={styles.primaryText}>{title}</Text>
+        </View>
       )}
     </TouchableOpacity>
   );
 }
 
-export function SecondaryButton({ title, onPress, style, textColor }) {
+export function SecondaryButton({ title, onPress, style, textColor, icon }) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={onPress}
       style={[styles.secondary, style]}
     >
-      <Text style={[styles.secondaryText, textColor ? { color: textColor } : null]}>{title}</Text>
+      <View style={styles.btnContent}>
+        {icon ? (
+          <MaterialCommunityIcons
+            name={icon}
+            size={18}
+            color={textColor || colors.primary}
+            style={styles.btnIcon}
+          />
+        ) : null}
+        <Text style={[styles.secondaryText, textColor ? { color: textColor } : null]}>{title}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -87,6 +108,14 @@ const styles = StyleSheet.create({
   },
   primaryDisabled: {
     backgroundColor: colors.primaryLight,
+  },
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnIcon: {
+    marginRight: spacing.sm,
   },
   primaryText: {
     color: colors.white,

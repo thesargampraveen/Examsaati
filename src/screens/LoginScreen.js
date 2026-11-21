@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '../theme';
 import { PrimaryButton, Card, FieldLabel } from '../components/ui';
@@ -75,7 +76,16 @@ export default function LoginScreen({ navigation }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.container}>
-          <Text style={styles.title}>{isRegister ? 'Create your account 🎓' : 'Welcome back, saathi 👋'}</Text>
+          <View style={styles.titleRow}>
+            <MaterialCommunityIcons
+              name={isRegister ? 'school-outline' : 'hand-wave-outline'}
+              size={22}
+              color={colors.primary}
+            />
+            <Text style={styles.title}>
+              {isRegister ? '  Create your account' : '  Welcome back, saathi'}
+            </Text>
+          </View>
           <Text style={styles.subtitle}>
             {isRegister
               ? 'Register with your number and a password to get started.'
@@ -164,8 +174,9 @@ export default function LoginScreen({ navigation }) {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.back}>← Back</Text>
+          <TouchableOpacity style={styles.backRow} onPress={() => navigation.goBack()}>
+            <MaterialCommunityIcons name="arrow-left" size={16} color={colors.textMuted} />
+            <Text style={styles.back}> Back</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -177,6 +188,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1, padding: spacing.xl, justifyContent: 'center' },
   title: { ...typography.title, marginBottom: spacing.sm },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
   subtitle: { ...typography.secondary, marginBottom: spacing.xl },
   error: { color: colors.danger, fontSize: 13, marginBottom: spacing.md },
   input: {
@@ -221,5 +233,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  back: { color: colors.textMuted, textAlign: 'center', marginTop: spacing.lg, fontSize: 14 },
+  backRow: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+  back: { color: colors.textMuted, fontSize: 14 },
 });

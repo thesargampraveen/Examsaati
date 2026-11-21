@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '../theme';
 import { Avatar, Card, SecondaryButton } from '../components/ui';
@@ -39,10 +40,8 @@ export default function ProfileScreen({ navigation }) {
     ]);
   };
 
-  const statusLabel =
-    user?.verificationStatus === 'verified'
-      ? '✓ Verified candidate'
-      : '⏳ Verification pending';
+  const verified = user?.verificationStatus === 'verified';
+  const statusLabel = verified ? 'Verified candidate' : 'Verification pending';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -51,8 +50,13 @@ export default function ProfileScreen({ navigation }) {
           <Avatar name={user?.name} color={user?.avatarColor} size={72} />
           <Text style={styles.name}>{user?.name || 'Student'}</Text>
           <Text style={styles.phone}>{user?.phone}</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{statusLabel}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: verified ? colors.accent : colors.warning }]}>
+            <MaterialCommunityIcons
+              name={verified ? 'check-circle-outline' : 'timer-sand'}
+              size={14}
+              color={colors.white}
+            />
+            <Text style={styles.statusText}> {statusLabel}</Text>
           </View>
         </Card>
 
@@ -89,7 +93,7 @@ export default function ProfileScreen({ navigation }) {
         <Card style={{ marginTop: spacing.lg }}>
           <Text style={styles.sectionTitle}>Blocked students ({blocked.length})</Text>
           {blocked.length === 0 ? (
-            <Text style={styles.muted}>No one blocked. Keep it that way 🙌</Text>
+            <Text style={styles.muted}>No one blocked. Keep it that way.</Text>
           ) : (
             blocked.map((u) => (
               <View key={u._id} style={styles.blockedRow}>
@@ -120,11 +124,12 @@ const styles = StyleSheet.create({
   name: { fontSize: 20, fontWeight: '800', color: colors.text, marginTop: spacing.md },
   phone: { ...typography.secondary, marginTop: 2 },
   statusBadge: {
-    backgroundColor: colors.accent,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: radius.full,
     marginTop: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statusText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   sectionTitle: { ...typography.h2, marginBottom: spacing.md },

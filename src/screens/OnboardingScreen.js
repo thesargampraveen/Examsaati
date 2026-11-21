@@ -1,27 +1,28 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, shadow, spacing, typography } from '../theme';
 import { PrimaryButton, Card } from '../components/ui';
 
 const POINTS = [
   {
-    icon: '🎓',
+    icon: 'school-outline',
     title: 'Verified students only',
     text: 'Phone-verified accounts + admit-card check keeps fake agents and spam out.',
   },
   {
-    icon: '🤝',
+    icon: 'handshake-outline',
     title: 'Same-center friends',
     text: 'Connect with students appearing at your exact exam center.',
   },
   {
-    icon: '🧳',
+    icon: 'bag-suitcase-outline',
     title: 'Travel & stay partners',
     text: 'Find students from your city, with gender-safe filters.',
   },
   {
-    icon: '🛡️',
+    icon: 'shield-check-outline',
     title: '"I reached" button',
     text: 'One tap tells your parents you arrived safely.',
   },
@@ -43,7 +44,7 @@ export default function OnboardingScreen({ navigation }) {
 
         {POINTS.map((p) => (
           <Card key={p.title} style={styles.point}>
-            <Text style={styles.pointIcon}>{p.icon}</Text>
+            <MaterialCommunityIcons name={p.icon} size={28} color={colors.primary} style={styles.pointIcon} />
             <View style={{ flex: 1 }}>
               <Text style={styles.pointTitle}>{p.title}</Text>
               <Text style={styles.pointText}>{p.text}</Text>
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     gap: spacing.md,
   },
-  pointIcon: { fontSize: 28 },
+  pointIcon: { marginRight: 2 },
   pointTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
   pointText: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
   footer: {

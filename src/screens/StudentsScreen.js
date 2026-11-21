@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '../theme';
 import { Avatar, Card, PrimaryButton, SecondaryButton } from '../components/ui';
@@ -79,12 +80,13 @@ export default function StudentsScreen({ navigation }) {
         <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing.md }}>
           {isFriend ? (
             <SecondaryButton
-              title="💬 Message"
+              title="Message"
+              icon="message-text-outline"
               style={{ flex: 1 }}
               onPress={() => navigation.navigate('Chat', { friend: item })}
             />
           ) : item.requestSent ? (
-            <SecondaryButton title="Request sent ✓" style={{ flex: 1 }} />
+            <SecondaryButton title="Request sent" icon="check" style={{ flex: 1 }} />
           ) : (
             <PrimaryButton
               title="Connect"
@@ -113,7 +115,7 @@ export default function StudentsScreen({ navigation }) {
         <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.primary} />
       ) : students.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>👥</Text>
+          <MaterialCommunityIcons name="account-group-outline" size={48} color={colors.textMuted} style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>No students yet</Text>
           <Text style={styles.emptyText}>
             As more verified students join your exam center, they will show up here.
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
   meta: { fontSize: 13, color: colors.textSecondary, marginTop: 1, textTransform: 'capitalize' },
   reportLink: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
   empty: { alignItems: 'center', padding: spacing.xxl, marginTop: spacing.xxl },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+  emptyIcon: { marginBottom: spacing.md },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
   emptyText: { ...typography.secondary, textAlign: 'center', marginTop: spacing.sm },
 });

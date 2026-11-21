@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CATEGORY_META, colors, radius, spacing, typography } from '../theme';
 import { Avatar, Card, PrimaryButton } from '../components/ui';
@@ -64,7 +65,7 @@ export default function CenterGuideScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>📖</Text>
+          <MaterialCommunityIcons name="book-open-variant" size={48} color={colors.textMuted} style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>Select your exam center first</Text>
         </View>
       </SafeAreaView>
@@ -84,7 +85,10 @@ export default function CenterGuideScreen() {
         contentContainerStyle={{ padding: spacing.lg }}
         ListHeaderComponent={
           <Card style={{ marginBottom: spacing.lg }}>
-            <Text style={styles.shareTitle}>Share something useful 📝</Text>
+            <View style={styles.shareTitleRow}>
+              <MaterialCommunityIcons name="pencil" size={18} color={colors.text} />
+              <Text style={styles.shareTitle}> Share something useful</Text>
+            </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginVertical: spacing.md }}>
               {Object.entries(CATEGORY_META).map(([key, meta]) => (
                 <TouchableOpacity
@@ -92,8 +96,14 @@ export default function CenterGuideScreen() {
                   onPress={() => setCategory(key)}
                   style={[styles.catChip, category === key && styles.catChipActive]}
                 >
+                  <MaterialCommunityIcons
+                    name={meta.icon}
+                    size={14}
+                    color={category === key ? colors.white : colors.textSecondary}
+                    style={styles.catIcon}
+                  />
                   <Text style={[styles.catText, category === key && styles.catTextActive]}>
-                    {meta.icon} {meta.label}
+                    {meta.label}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -115,7 +125,7 @@ export default function CenterGuideScreen() {
             <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.lg }} />
           ) : (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🗺️</Text>
+              <MaterialCommunityIcons name="map-outline" size={48} color={colors.textMuted} style={styles.emptyIcon} />
               <Text style={styles.emptyTitle}>No tips yet</Text>
               <Text style={styles.emptyText}>Be the first to share a route or food tip!</Text>
             </View>
@@ -124,9 +134,17 @@ export default function CenterGuideScreen() {
         renderItem={({ item }) => (
           <Card style={styles.tip}>
             <View style={styles.tipHeader}>
-              <Text style={styles.catBadge}>
-                {CATEGORY_META[item.category]?.icon || '💡'} {CATEGORY_META[item.category]?.label || 'Tip'}
-              </Text>
+              <View style={styles.catBadgeRow}>
+                <MaterialCommunityIcons
+                  name={CATEGORY_META[item.category]?.icon || 'lightbulb-on-outline'}
+                  size={13}
+                  color={colors.primary}
+                />
+                <Text style={styles.catBadge}>
+                  {' '}
+                  {CATEGORY_META[item.category]?.label || 'Tip'}
+                </Text>
+              </View>
               {item.author?._id === user?._id && (
                 <TouchableOpacity onPress={() => removeTip(item._id)}>
                   <Text style={styles.delete}>Delete</Text>
@@ -153,8 +171,11 @@ const styles = StyleSheet.create({
   header: { backgroundColor: colors.primary, padding: spacing.xl, paddingBottom: spacing.lg },
   headerTitle: { fontSize: 22, fontWeight: '800', color: colors.white },
   headerSub: { fontSize: 13, color: colors.primaryLight, marginTop: 2 },
+  shareTitleRow: { flexDirection: 'row', alignItems: 'center' },
   shareTitle: { ...typography.h2 },
   catChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: radius.full,
@@ -165,6 +186,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   catChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  catIcon: { marginRight: 5 },
   catText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
   catTextActive: { color: colors.white },
   input: {
@@ -181,6 +203,7 @@ const styles = StyleSheet.create({
   },
   tip: { marginBottom: spacing.md },
   tipHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  catBadgeRow: { flexDirection: 'row', alignItems: 'center' },
   catBadge: { fontSize: 12, fontWeight: '700', color: colors.primary },
   delete: { color: colors.danger, fontSize: 12, fontWeight: '600' },
   tipText: { fontSize: 15, color: colors.text, marginTop: spacing.sm, lineHeight: 21 },
@@ -193,7 +216,7 @@ const styles = StyleSheet.create({
   tipAuthor: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
   tipDate: { fontSize: 12, color: colors.textMuted },
   empty: { alignItems: 'center', padding: spacing.xxl },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+  emptyIcon: { marginBottom: spacing.md },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
   emptyText: { ...typography.secondary, marginTop: spacing.sm, textAlign: 'center' },
 });

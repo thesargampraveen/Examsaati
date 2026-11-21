@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '../theme';
 import { Card, FieldLabel, PrimaryButton } from '../components/ui';
@@ -60,9 +61,12 @@ export default function GuardianScreen({ navigation }) {
           <PrimaryButton title="Save contact" onPress={save} loading={saving} />
         </Card>
 
-        <Text style={styles.note}>
-          🔒 The guardian only receives your arrival alert — they cannot see your chats or profile.
-        </Text>
+        <View style={styles.noteRow}>
+          <MaterialCommunityIcons name="lock-outline" size={14} color={colors.textMuted} style={styles.noteIcon} />
+          <Text style={styles.note}>
+            The guardian only receives your arrival alert — they cannot see your chats or profile.
+          </Text>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -84,5 +88,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.lg,
   },
-  note: { ...typography.muted, marginTop: spacing.lg, lineHeight: 18 },
+  noteRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: spacing.lg },
+  noteIcon: { marginTop: 2 },
+  note: { ...typography.muted, flex: 1, lineHeight: 18 },
 });

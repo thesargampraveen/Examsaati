@@ -234,7 +234,8 @@ export default function ProfileSetupScreen() {
                           No centers found for "{centerQuery.trim()}"
                         </Text>
                         <SecondaryButton
-                          title={`➕ Add "${centerQuery.trim()}" as my center`}
+                          title={`Add "${centerQuery.trim()}" as my center`}
+                          icon="plus"
                           onPress={addMissingCenter}
                           loading={addingCenter}
                         />
