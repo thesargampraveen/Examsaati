@@ -3,7 +3,7 @@ import { ActivityIndicator, StatusBar, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { colors } from './src/theme';
 
@@ -31,6 +31,7 @@ const TAB_ICONS: Record<string, string> = {
 };
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -41,9 +42,9 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 62,
-          paddingBottom: 8,
+          height: 62 + insets.bottom,
           paddingTop: 6,
+          paddingBottom: Math.max(insets.bottom, 8),
         },
         tabBarIcon: ({ color }) => (
           <View style={{ opacity: color === colors.primary ? 1 : 0.55 }}>

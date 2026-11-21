@@ -4,7 +4,6 @@ import {
   Alert,
   FlatList,
   KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -63,7 +62,7 @@ export default function ChatScreen({ route, navigation }) {
   if (!friend) return null;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} style={styles.backArrow} />
@@ -80,8 +79,7 @@ export default function ChatScreen({ route, navigation }) {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+        behavior="padding"
       >
         <View style={{ flex: 1 }}>
           {messages.length === 0 ? (

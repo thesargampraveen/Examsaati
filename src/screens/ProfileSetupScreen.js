@@ -4,7 +4,6 @@ import {
   Alert,
   FlatList,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -124,7 +123,7 @@ export default function ProfileSetupScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
