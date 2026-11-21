@@ -39,7 +39,14 @@ export default function PartnersScreen() {
           sameGenderOnly && user?.gender ? user.gender : ''
         );
       }
-      setPartners(res.partners || []);
+      const list = res.partners || [];
+      setPartners(list);
+      // restore "Request sent" from the server so it survives reloads
+      const sent = {};
+      for (const p of list) {
+        if (p.requestSent || p.connectionStatus === 'pending_sent') sent[p._id] = true;
+      }
+      setSentTo(sent);
     } catch {
       setPartners([]);
     }

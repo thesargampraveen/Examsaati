@@ -60,7 +60,9 @@ export default function StudentsScreen({ navigation }) {
   };
 
   const renderStudent = ({ item }) => {
-    const isFriend = friends.includes(item._id);
+    const isFriend = friends.includes(item._id) || item.connectionStatus === 'friends';
+    const requestSent = item.requestSent || item.connectionStatus === 'pending_sent';
+    const requestReceived = item.connectionStatus === 'pending_received';
     return (
       <Card style={styles.card}>
         <View style={styles.row}>
@@ -85,8 +87,10 @@ export default function StudentsScreen({ navigation }) {
               style={{ flex: 1 }}
               onPress={() => navigation.navigate('Chat', { friend: item })}
             />
-          ) : item.requestSent ? (
+          ) : requestSent ? (
             <SecondaryButton title="Request sent" icon="check" style={{ flex: 1 }} />
+          ) : requestReceived ? (
+            <SecondaryButton title="Request received" icon="bell-outline" style={{ flex: 1 }} />
           ) : (
             <PrimaryButton
               title="Connect"
