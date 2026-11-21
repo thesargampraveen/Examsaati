@@ -84,8 +84,8 @@ function RootNavigator() {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
         </>
-      ) : !user?.name ? (
-        // logged in but profile not completed yet
+      ) : !user?.examCenter ? (
+        // logged in but profile setup (exam center etc.) not completed yet
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       ) : (
         <>

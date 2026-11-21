@@ -8,7 +8,7 @@ const POINTS = [
   {
     icon: '🎓',
     title: 'Verified students only',
-    text: 'Phone OTP + admit-card check keeps fake agents and spam out.',
+    text: 'Phone-verified accounts + admit-card check keeps fake agents and spam out.',
   },
   {
     icon: '🤝',

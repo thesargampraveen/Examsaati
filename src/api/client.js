@@ -35,8 +35,9 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
 
 export const api = {
   // auth
-  sendOtp: (phone) => request('/api/auth/send-otp', { method: 'POST', body: { phone } }),
-  verifyOtp: (phone, otp) => request('/api/auth/verify-otp', { method: 'POST', body: { phone, otp } }),
+  register: (name, phone, password) =>
+    request('/api/auth/register', { method: 'POST', body: { name, phone, password } }),
+  login: (phone, password) => request('/api/auth/login', { method: 'POST', body: { phone, password } }),
   completeProfile: (profile) =>
     request('/api/auth/complete-profile', { method: 'POST', body: profile }),
   me: () => request('/api/auth/me'),

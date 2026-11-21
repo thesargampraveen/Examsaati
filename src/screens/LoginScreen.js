@@ -1,40 +1,63 @@
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '../theme';
-import { PrimaryButton, SecondaryButton, Card, FieldLabel } from '../components/ui';
+import { PrimaryButton, Card, FieldLabel } from '../components/ui';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
+const PASSWORD_MIN = 6;
+
 export default function LoginScreen({ navigation }) {
   const { signInWithToken } = useAuth();
-  const [step, setStep] = useState('phone'); // phone | otp
+  const [mode, setMode] = useState('login'); // login | register
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [devOtp, setDevOtp] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const sendOtp = async () => {
+  const switchMode = (next) => {
+    setMode(next);
     setError('');
-    setLoading(true);
-    try {
-      const res = await api.sendOtp(phone);
-      setDevOtp(res.devOtp || '');
-      setStep('otp');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setPassword('');
+    setConfirmPassword('');
   };
 
-  const verifyOtp = async () => {
+  const validate = () => {
+    if (phone.length !== 10) return 'Enter a valid 10-digit mobile number';
+    if (password.length < PASSWORD_MIN) return `Password must be at least ${PASSWORD_MIN} characters`;
+    if (mode === 'register') {
+      if (!name.trim()) return 'Enter your name';
+      if (password !== confirmPassword) return 'Passwords do not match';
+    }
+    return '';
+  };
+
+  const submit = async () => {
+    const problem = validate();
+    if (problem) {
+      setError(problem);
+      return;
+    }
     setError('');
     setLoading(true);
     try {
-      const res = await api.verifyOtp(phone, otp);
-      // Signing in flips RootNavigator to the ProfileSetup branch automatically for new users
+      const res =
+        mode === 'register'
+          ? await api.register(name.trim(), phone, password)
+          : await api.login(phone, password);
+      // Registration lands on ProfileSetup automatically (exam center not set yet)
       await signInWithToken(res.token, res.user);
     } catch (err) {
       setError(err.message);
@@ -43,6 +66,8 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  const isRegister = mode === 'register';
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
@@ -50,68 +75,94 @@ export default function LoginScreen({ navigation }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.container}>
-          <Text style={styles.title}>
-            {step === 'phone' ? 'Welcome, saathi 👋' : 'Enter the OTP'}
-          </Text>
+          <Text style={styles.title}>{isRegister ? 'Create your account 🎓' : 'Welcome back, saathi 👋'}</Text>
           <Text style={styles.subtitle}>
-            {step === 'phone'
-              ? 'Only genuine exam candidates get in. Verify your phone to start.'
-              : `We sent a 6-digit code to ${phone}. Valid for 10 minutes.`}
+            {isRegister
+              ? 'Register with your number and a password to get started.'
+              : 'Log in with your registered number and password.'}
           </Text>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          {step === 'phone' ? (
-            <Card>
-              <FieldLabel>Mobile number</FieldLabel>
-              <View style={styles.phoneRow}>
-                <Text style={styles.prefix}>+91</Text>
+          <Card>
+            {isRegister ? (
+              <>
+                <FieldLabel>Full name</FieldLabel>
                 <TextInput
-                  style={styles.phoneInput}
-                  value={phone}
-                  onChangeText={(t) => setPhone(t.replace(/\D/g, '').slice(0, 10))}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                  placeholder="98765 43210"
+                  style={styles.input}
+                  value={name}
+                  onChangeText={(t) => setName(t.slice(0, 60))}
+                  placeholder="e.g. Priya Sharma"
                   placeholderTextColor={colors.textMuted}
+                  autoCapitalize="words"
                 />
-              </View>
-              <PrimaryButton title="Send OTP" onPress={sendOtp} loading={loading} disabled={phone.length !== 10} />
-            </Card>
-          ) : (
-            <Card>
-              <FieldLabel>6-digit OTP</FieldLabel>
+              </>
+            ) : null}
+
+            <FieldLabel>Mobile number</FieldLabel>
+            <View style={styles.phoneRow}>
+              <Text style={styles.prefix}>+91</Text>
               <TextInput
-                style={styles.otpInput}
-                value={otp}
-                onChangeText={(t) => setOtp(t.replace(/\D/g, '').slice(0, 6))}
-                keyboardType="number-pad"
-                maxLength={6}
-                placeholder="••••••"
+                style={styles.phoneInput}
+                value={phone}
+                onChangeText={(t) => setPhone(t.replace(/\D/g, '').slice(0, 10))}
+                keyboardType="phone-pad"
+                maxLength={10}
+                placeholder="98765 43210"
                 placeholderTextColor={colors.textMuted}
               />
-              {devOtp ? (
-                <Text style={styles.devOtp}>Dev mode OTP: {devOtp}</Text>
-              ) : null}
-              <PrimaryButton title="Verify & Continue" onPress={verifyOtp} loading={loading} disabled={otp.length !== 6} />
-              <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing.md }}>
-                <SecondaryButton
-                  title="Change number"
-                  style={{ flex: 1 }}
-                  onPress={() => {
-                    setStep('phone');
-                    setOtp('');
-                    setError('');
-                  }}
+            </View>
+
+            <FieldLabel>Password</FieldLabel>
+            <View style={styles.passwordRow}>
+              <TextInput
+                style={styles.passwordInput}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                placeholder={isRegister ? `At least ${PASSWORD_MIN} characters` : 'Your password'}
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity onPress={() => setShowPassword((v) => !v)}>
+                <Text style={styles.showToggle}>{showPassword ? 'Hide' : 'Show'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {isRegister ? (
+              <>
+                <FieldLabel>Confirm password</FieldLabel>
+                <TextInput
+                  style={styles.input}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showPassword}
+                  placeholder="Re-enter password"
+                  placeholderTextColor={colors.textMuted}
+                  autoCapitalize="none"
                 />
-                <SecondaryButton
-                  title="Resend OTP"
-                  style={{ flex: 1 }}
-                  onPress={sendOtp}
-                />
-              </View>
-            </Card>
-          )}
+              </>
+            ) : null}
+
+            <PrimaryButton
+              title={isRegister ? 'Register' : 'Log In'}
+              onPress={submit}
+              loading={loading}
+              disabled={
+                phone.length !== 10 ||
+                password.length < PASSWORD_MIN ||
+                (isRegister && (!name.trim() || password !== confirmPassword))
+              }
+            />
+          </Card>
+
+          <TouchableOpacity onPress={() => switchMode(isRegister ? 'login' : 'register')}>
+            <Text style={styles.switchText}>
+              {isRegister
+                ? 'Already have an account? Log in'
+                : "New here? Create an account"}
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.back}>← Back</Text>
@@ -128,6 +179,17 @@ const styles = StyleSheet.create({
   title: { ...typography.title, marginBottom: spacing.sm },
   subtitle: { ...typography.secondary, marginBottom: spacing.xl },
   error: { color: colors.danger, fontSize: 13, marginBottom: spacing.md },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    backgroundColor: colors.bg,
+    fontSize: 16,
+    color: colors.text,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    marginBottom: spacing.lg,
+  },
   phoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -140,24 +202,24 @@ const styles = StyleSheet.create({
   },
   prefix: { fontSize: 16, fontWeight: '700', color: colors.text, marginRight: spacing.sm },
   phoneInput: { flex: 1, fontSize: 16, color: colors.text, paddingVertical: 14 },
-  otpInput: {
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
-    backgroundColor: colors.bg,
-    fontSize: 24,
-    letterSpacing: 12,
-    textAlign: 'center',
-    color: colors.text,
-    paddingVertical: 14,
+    paddingHorizontal: spacing.md,
     marginBottom: spacing.lg,
+    backgroundColor: colors.bg,
   },
-  devOtp: {
-    fontSize: 12,
-    color: colors.warning,
-    fontWeight: '600',
-    marginBottom: spacing.md,
+  passwordInput: { flex: 1, fontSize: 16, color: colors.text, paddingVertical: 14 },
+  showToggle: { fontSize: 13, fontWeight: '700', color: colors.primary },
+  switchText: {
+    color: colors.primary,
     textAlign: 'center',
+    marginTop: spacing.xl,
+    fontSize: 14,
+    fontWeight: '600',
   },
-  back: { color: colors.textMuted, textAlign: 'center', marginTop: spacing.xl, fontSize: 14 },
+  back: { color: colors.textMuted, textAlign: 'center', marginTop: spacing.lg, fontSize: 14 },
 });
