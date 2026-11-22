@@ -86,4 +86,9 @@ export const api = {
   unblock: (userId) => request('/api/safety/unblock', { method: 'POST', body: { userId } }),
   report: (userId, reason, details) =>
     request('/api/safety/report', { method: 'POST', body: { userId, reason, details } }),
+
+  // exam essentials checklist
+  getChecklist: () => request('/api/checklist'),
+  saveChecklist: (items) =>
+    request('/api/checklist', { method: 'PUT', body: { items } }),
 };

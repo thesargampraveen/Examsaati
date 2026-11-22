@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, shadow, spacing, typography } from '../theme';
@@ -7,9 +7,49 @@ import { Card, PrimaryButton, SecondaryButton } from '../components/ui';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
+const CHECKLIST_ITEMS = [
+  { id: 'admitCard', label: 'Admit card' },
+  { id: 'aadhar', label: 'Original Aadhar card + xerox' },
+  { id: 'photos', label: 'Min. 5 passport size photos' },
+  { id: 'waterBottle', label: 'Water bottle' },
+];
+
 export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
   const [reaching, setReaching] = useState(false);
+  const [checkedItems, setCheckedItems] = useState({});
+  const [showReadyModal, setShowReadyModal] = useState(false);
+  const saveTimer = useRef(null);
+
+  const allChecked = CHECKLIST_ITEMS.every((item) => checkedItems[item.id]);
+
+  // Load the saved checklist from the backend on mount
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await api.getChecklist();
+        if (active && res?.items) setCheckedItems(res.items);
+      } catch {
+        // offline / server down — start unticked
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Optimistic tick + debounced save to the database
+  const toggleItem = useCallback((id) => {
+    setCheckedItems((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        api.saveChecklist(next).catch(() => {});
+      }, 400);
+      return next;
+    });
+  }, []);
 
   const markReached = useCallback(async () => {
     setReaching(true);
@@ -110,20 +150,53 @@ export default function HomeScreen({ navigation }) {
         </Card>
 
         {/* Quick actions */}
-        <View style={styles.quickRow}>
-          <Card style={[styles.quickCard]}>
-            <MaterialCommunityIcons name="bag-suitcase-outline" size={26} color={colors.primary} style={styles.quickIcon} />
-            <Text style={styles.quickLabel}>Travel partners</Text>
-          </Card>
-          <Card style={styles.quickCard}>
-            <MaterialCommunityIcons name="bed-outline" size={26} color={colors.primary} style={styles.quickIcon} />
-            <Text style={styles.quickLabel}>Stay sharing</Text>
-          </Card>
+        {/* <View style={styles.quickRow}>
           <Card style={styles.quickCard}>
             <MaterialCommunityIcons name="message-text-outline" size={26} color={colors.primary} style={styles.quickIcon} />
             <Text style={styles.quickLabel}>Chats</Text>
           </Card>
-        </View>
+        </View> */}
+
+        {/* Exam essentials checklist */}
+        <Card style={styles.checklistCard}>
+          <View style={styles.tipTitleRow}>
+            <MaterialCommunityIcons name="clipboard-check-outline" size={18} color={colors.primaryDark} />
+            <Text style={styles.checklistTitle}>  Exam essentials</Text>
+          </View>
+          <Text style={styles.checklistSub}>Tick off everything before you leave for the center.</Text>
+
+          {CHECKLIST_ITEMS.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.checkRow}
+              activeOpacity={0.7}
+              onPress={() => toggleItem(item.id)}
+            >
+              <MaterialCommunityIcons
+                name={checkedItems[item.id] ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                size={22}
+                color={checkedItems[item.id] ? colors.accent : colors.textMuted}
+              />
+              <Text
+                style={[
+                  styles.checkLabel,
+                  checkedItems[item.id] && styles.checkLabelDone,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+          {allChecked && (
+            <PrimaryButton
+              title="Done"
+              icon="check-decagram-outline"
+              onPress={() => setShowReadyModal(true)}
+              style={{ marginTop: spacing.lg }}
+            />
+          )}
+        </Card>
 
         <Card style={styles.tipCard}>
           <View style={styles.tipTitleRow}>
@@ -136,6 +209,26 @@ export default function HomeScreen({ navigation }) {
           </Text>
         </Card>
       </ScrollView>
+
+      {/* All-packed popup */}
+      <Modal visible={showReadyModal} transparent animationType="fade" onRequestClose={() => setShowReadyModal(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrap}>
+              <MaterialCommunityIcons name="check-decagram" size={40} color={colors.white} />
+            </View>
+            <Text style={styles.modalTitle}>You're ready for the exam!</Text>
+            <Text style={styles.modalText}>
+              All your essentials are packed. Stay calm, reach on time and give it your best.
+            </Text>
+            <PrimaryButton
+              title="Let's go"
+              onPress={() => setShowReadyModal(false)}
+              style={{ marginTop: spacing.xl, alignSelf: 'stretch' }}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -192,6 +285,47 @@ const styles = StyleSheet.create({
   quickCard: { flex: 1, alignItems: 'center', paddingVertical: spacing.lg },
   quickIcon: { marginBottom: spacing.xs },
   quickLabel: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+  checklistCard: { marginTop: spacing.lg },
+  checklistTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
+  checklistSub: { ...typography.secondary, marginTop: spacing.xs },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm + 2,
+  },
+  checkLabel: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.text },
+  checkLabelDone: { color: colors.textMuted, textDecorationLine: 'line-through' },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    alignItems: 'center',
+    ...shadow,
+  },
+  modalIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.full,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  modalTitle: { fontSize: 19, fontWeight: '800', color: colors.text, textAlign: 'center' },
+  modalText: {
+    ...typography.secondary,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
   tipTitleRow: { flexDirection: 'row', alignItems: 'center' },
   tipCard: { marginTop: spacing.lg, backgroundColor: colors.primaryLight, borderColor: colors.primaryLight },
   tipTitle: { fontSize: 14, fontWeight: '800', color: colors.primaryDark },

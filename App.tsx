@@ -13,7 +13,6 @@ import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import StudentsScreen from './src/screens/StudentsScreen';
 import ChatsScreen from './src/screens/ChatsScreen';
-import PartnersScreen from './src/screens/PartnersScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import CenterGuideScreen from './src/screens/CenterGuideScreen';
@@ -26,7 +25,6 @@ const TAB_ICONS: Record<string, string> = {
   Home: '🏠',
   Students: '👥',
   Chats: '💬',
-  Partners: '🧳',
   Profile: '👤',
 };
 
@@ -56,7 +54,6 @@ function MainTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Students" component={StudentsScreen} />
       <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Partners" component={PartnersScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
