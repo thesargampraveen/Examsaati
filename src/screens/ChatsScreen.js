@@ -6,6 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { colors, radius, spacing, typography } from '../theme';
 import { Avatar, Card } from '../components/ui';
 import { api } from '../api/client';
+import ExamMeta from '../components/ExamMeta';
 
 export default function ChatsScreen({ navigation }) {
   const [threads, setThreads] = useState(null);
@@ -51,6 +52,7 @@ export default function ChatsScreen({ navigation }) {
         <View style={{ flex: 1, marginLeft: spacing.md }}>
           <Text style={styles.name}>{item.requester.name || 'Student'}</Text>
           <Text style={styles.meta}>wants to connect · {item.requester.exam || ''}</Text>
+          <ExamMeta user={item.requester} style={{ marginTop: 2 }} />
         </View>
       </View>
       <View style={{ flexDirection: 'row', gap: spacing.md, marginTop: spacing.md }}>
@@ -90,6 +92,7 @@ export default function ChatsScreen({ navigation }) {
             ? `${item.lastMessage.sender === item.friend._id ? '' : 'You: '}${item.lastMessage.text}`
             : `Say hi to ${item.friend.name?.split(' ')[0] || 'your saathi'}`}
         </Text>
+        <ExamMeta user={item.friend} style={{ marginTop: 2 }} />
       </View>
     </TouchableOpacity>
   );

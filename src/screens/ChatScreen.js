@@ -16,6 +16,7 @@ import { colors, radius, spacing } from '../theme';
 import { Avatar } from '../components/ui';
 import { api } from '../api/client';
 import ReportBlockSheet from '../components/ReportBlockSheet';
+import ExamMeta from '../components/ExamMeta';
 
 export default function ChatScreen({ route, navigation }) {
   const friend = route.params?.friend;
@@ -71,6 +72,7 @@ export default function ChatScreen({ route, navigation }) {
         <View style={{ flex: 1, marginLeft: spacing.md }}>
           <Text style={styles.name}>{friend.name || 'Student'}</Text>
           <Text style={styles.meta}>{friend.exam || ''}</Text>
+          <ExamMeta user={friend} light style={{ marginTop: 1 }} />
         </View>
         <TouchableOpacity onPress={() => setReportVisible(true)}>
           <Text style={styles.reportLink}>Report</Text>

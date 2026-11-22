@@ -7,6 +7,7 @@ import { Avatar, Card, PrimaryButton, SecondaryButton } from '../components/ui';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import ReportBlockSheet from '../components/ReportBlockSheet';
+import ExamMeta from '../components/ExamMeta';
 
 export default function StudentsScreen({ navigation }) {
   const { user } = useAuth();
@@ -74,6 +75,7 @@ export default function StudentsScreen({ navigation }) {
               {item.homeCity ? ` · ${item.homeCity}` : ''}
             </Text>
             {!!item.gender && <Text style={styles.meta}>{item.gender}</Text>}
+            <ExamMeta user={item} style={{ marginTop: 4 }} />
           </View>
           <TouchableOpacity onPress={() => setReportTarget(item)}>
             <Text style={styles.reportLink}>Report</Text>
