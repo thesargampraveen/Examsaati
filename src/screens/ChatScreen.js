@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, shadow, typography } from '../theme';
 import { Avatar } from '../components/ui';
 import { api } from '../api/client';
 import ReportBlockSheet from '../components/ReportBlockSheet';
@@ -65,8 +65,8 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} style={styles.backArrow} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} />
         </TouchableOpacity>
         <Avatar name={friend.name} color={friend.avatarColor} size={38} />
         <View style={{ flex: 1, marginLeft: spacing.md }}>
@@ -86,12 +86,12 @@ export default function ChatScreen({ route, navigation }) {
         <View style={{ flex: 1 }}>
           {messages.length === 0 ? (
             <View style={styles.empty}>
-              <View style={styles.emptyTextRow}>
-                <Text style={styles.emptyText}>
-                  Start the conversation — wish them luck for {friend.exam || 'the exam'}!
-                </Text>
-                <MaterialCommunityIcons name="clover" size={16} color={colors.accent} />
+              <View style={styles.emptyIconWrap}>
+                <MaterialCommunityIcons name="clover" size={26} color={colors.primary} />
               </View>
+              <Text style={styles.emptyText}>
+                Start the conversation — wish them luck for {friend.exam || 'the exam'}! 🍀
+              </Text>
             </View>
           ) : null}
           <FlatList
@@ -155,30 +155,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primary,
-    padding: spacing.md,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: radius.lg,
+    borderBottomRightRadius: radius.lg,
+    ...shadow,
   },
-  backArrow: { marginRight: spacing.md, paddingHorizontal: 6 },
+  backBtn: {
+    marginRight: spacing.sm,
+    padding: spacing.xs,
+    borderRadius: radius.full,
+  },
   name: { color: colors.white, fontWeight: '700', fontSize: 16 },
-  meta: { color: colors.primaryLight, fontSize: 12 },
-  reportLink: { color: colors.primaryLight, fontSize: 12, fontWeight: '600' },
-  bubbleRow: { flexDirection: 'row', marginBottom: spacing.sm },
-  bubble: {
-    maxWidth: '80%',
-    borderRadius: radius.lg,
+  meta: { color: colors.primaryLight, fontSize: 12, marginTop: 1 },
+  reportLink: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '700',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.full,
+    overflow: 'hidden',
   },
-  bubbleMine: { backgroundColor: colors.primary, borderBottomRightRadius: 4 },
-  bubbleTheirs: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: 4 },
-  bubbleText: { fontSize: 15, color: colors.text },
-  bubbleTextMine: { fontSize: 15, color: colors.white },
-  time: { fontSize: 10, color: colors.textMuted, marginTop: 2, alignSelf: 'flex-end' },
-  timeMine: { fontSize: 10, color: colors.primaryLight, marginTop: 2, alignSelf: 'flex-end' },
+  bubbleRow: { flexDirection: 'row', marginBottom: spacing.sm, paddingHorizontal: 2 },
+  bubble: {
+    maxWidth: '78%',
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: spacing.sm + 2,
+  },
+  bubbleMine: {
+    backgroundColor: colors.primary,
+    borderBottomRightRadius: 4,
+    ...shadow,
+  },
+  bubbleTheirs: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderBottomLeftRadius: 4,
+  },
+  bubbleText: { fontSize: 15, color: colors.text, lineHeight: 21 },
+  bubbleTextMine: { fontSize: 15, color: colors.white, lineHeight: 21 },
+  time: { fontSize: 10, color: colors.textMuted, marginTop: 4, alignSelf: 'flex-end' },
+  timeMine: { fontSize: 10, color: colors.primaryLight, marginTop: 4, alignSelf: 'flex-end' },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: spacing.md,
+    paddingTop: spacing.sm,
     gap: spacing.sm,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
@@ -187,22 +213,37 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     backgroundColor: colors.bg,
-    borderRadius: radius.full,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingHorizontal: spacing.lg,
-    paddingVertical: 10,
+    paddingVertical: 12,
     fontSize: 15,
     color: colors.text,
     maxHeight: 110,
   },
   sendBtn: {
     backgroundColor: colors.primary,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
+    ...shadow,
   },
-  empty: { alignItems: 'center', padding: spacing.xl },
-  emptyTextRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center' },
+  empty: {
+    alignItems: 'center',
+    padding: spacing.xxl,
+    marginTop: spacing.xxl,
+  },
+  emptyIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  emptyText: { ...typography.secondary, textAlign: 'center', maxWidth: 260 },
 });
