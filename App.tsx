@@ -11,6 +11,7 @@ import OnboardingScreen from './src/screens/OnboardingScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import ProfileSetupScreen from './src/screens/ProfileSetupScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import NearbyScreen from './src/screens/NearbyScreen';
 import StudentsScreen from './src/screens/StudentsScreen';
 import ChatsScreen from './src/screens/ChatsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
@@ -23,6 +24,7 @@ const Tab = createBottomTabNavigator();
 
 const TAB_ICONS: Record<string, string> = {
   Home: '🏠',
+  Nearby: '📍',
   Students: '👥',
   Chats: '💬',
   Profile: '👤',
@@ -52,8 +54,10 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
+      
       <Tab.Screen name="Students" component={StudentsScreen} />
       <Tab.Screen name="Chats" component={ChatsScreen} />
+      <Tab.Screen name="Nearby" component={NearbyScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
