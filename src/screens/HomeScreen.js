@@ -136,7 +136,7 @@ export default function HomeScreen({ navigation }) {
                 />
                 <SecondaryButton
                   title="Students"
-                  icon="account-group-outline"
+                  icon="account-group"
                   style={{ flex: 1 }}
                   onPress={() => navigation.navigate('Students')}
                 />

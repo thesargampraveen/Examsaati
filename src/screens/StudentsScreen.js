@@ -124,7 +124,7 @@ export default function StudentsScreen({ navigation }) {
         <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.primary} />
       ) : students.length === 0 ? (
         <View style={styles.empty}>
-          <MaterialCommunityIcons name="account-group-outline" size={48} color={colors.textMuted} style={styles.emptyIcon} />
+          <MaterialCommunityIcons name="account-group" size={48} color={colors.textMuted} style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>No matching students yet</Text>
           <Text style={styles.emptyText}>
             Only students with the same exam AND same exam center appear here. As more of

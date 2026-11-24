@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,20 +6,25 @@ import { useFocusEffect } from '@react-navigation/native';
 import { colors, radius, spacing, shadow, typography } from '../theme';
 import { Avatar, Card } from '../components/ui';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import ExamMeta from '../components/ExamMeta';
 
 export default function ChatsScreen({ navigation }) {
+  const { user } = useAuth();
   const [threads, setThreads] = useState(null);
+  const [groups, setGroups] = useState(null);
   const [requests, setRequests] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [t, r] = await Promise.all([api.getThreads(), api.getRequests()]);
+      const [t, g, r] = await Promise.all([api.getThreads(), api.getGroups(), api.getRequests()]);
       setThreads(t.threads || []);
+      setGroups(g.groups || []);
       setRequests(r.requests || []);
     } catch {
       setThreads((prev) => prev || []);
+      setGroups((prev) => prev || []);
     }
   }, []);
 
@@ -44,6 +49,23 @@ export default function ChatsScreen({ navigation }) {
       Alert.alert('Error', err.message);
     }
   };
+
+  const items = useMemo(() => {
+    if (!threads) return null;
+    const dm = (threads || []).map((t) => ({
+      kind: 'dm',
+      key: `dm-${t.friend._id}`,
+      time: t.lastMessage ? new Date(t.lastMessage.createdAt).getTime() : 0,
+      ...t,
+    }));
+    const gr = (groups || []).map((g) => ({
+      kind: 'group',
+      key: `group-${g.group._id}`,
+      time: g.lastMessage ? new Date(g.lastMessage.createdAt).getTime() : 0,
+      ...g,
+    }));
+    return [...dm, ...gr].sort((a, b) => b.time - a.time);
+  }, [threads, groups]);
 
   const renderRequest = ({ item }) => (
     <Card style={styles.requestCard}>
@@ -72,45 +94,94 @@ export default function ChatsScreen({ navigation }) {
     </Card>
   );
 
-  const renderThread = ({ item }) => (
-    <TouchableOpacity
-      style={styles.thread}
-      activeOpacity={0.7}
-      onPress={() => navigation.navigate('Chat', { friend: item.friend })}
-    >
-      <Avatar name={item.friend.name} color={item.friend.avatarColor} size={48} />
-      <View style={{ flex: 1, marginLeft: spacing.md }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={styles.name} numberOfLines={1}>{item.friend.name || 'Student'}</Text>
-          {item.unread > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{item.unread}</Text>
-            </View>
+  const renderThread = ({ item }) => {
+    const isGroup = item.kind === 'group';
+    const title = isGroup ? item.group.name : item.friend.name;
+    const avatarColor = isGroup ? item.group.avatarColor : item.friend.avatarColor;
+    let preview;
+    if (item.lastMessage) {
+      const lm = item.lastMessage;
+      if (lm.system) preview = lm.text;
+      else if (isGroup) {
+        const mine = lm.sender === user?._id;
+        const prefix = mine
+          ? 'You: '
+          : lm.senderName
+            ? `${lm.senderName.split(' ')[0]}: `
+            : '';
+        preview = `${prefix}${lm.text}`;
+      } else {
+        preview = `${lm.sender === item.friend._id ? '' : 'You: '}${lm.text}`;
+      }
+    } else if (isGroup) {
+      preview = item.group.members?.length
+        ? `${item.group.members.map((m) => m.name?.split(' ')[0]).filter(Boolean).slice(0, 3).join(', ')}${item.group.members.length > 3 ? '…' : ''}`
+        : 'Group created';
+    } else {
+      preview = `Say hi to ${item.friend.name?.split(' ')[0] || 'your saathi'}`;
+    }
+
+    return (
+      <TouchableOpacity
+        style={styles.thread}
+        activeOpacity={0.7}
+        onPress={() =>
+          navigation.navigate('Chat', isGroup ? { group: item.group } : { friend: item.friend })
+        }
+      >
+        {isGroup ? (
+          <View style={[styles.groupAvatar, { backgroundColor: avatarColor || colors.primary }]}>
+            <MaterialCommunityIcons name="account-group" size={24} color={colors.white} />
+          </View>
+        ) : (
+          <Avatar name={title} color={avatarColor} size={48} />
+        )}
+        <View style={{ flex: 1, marginLeft: spacing.md }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={styles.name} numberOfLines={1}>{title || 'Student'}</Text>
+            {item.unread > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{item.unread}</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.preview} numberOfLines={1}>{preview}</Text>
+          {!isGroup && <ExamMeta user={item.friend} style={{ marginTop: 2 }} />}
+          {isGroup && (
+            <Text style={styles.meta}>
+              {item.group.members?.length || 0} members
+            </Text>
           )}
         </View>
-        <Text style={styles.preview} numberOfLines={1}>
-          {item.lastMessage
-            ? `${item.lastMessage.sender === item.friend._id ? '' : 'You: '}${item.lastMessage.text}`
-            : `Say hi to ${item.friend.name?.split(' ')[0] || 'your saathi'}`}
-        </Text>
-        <ExamMeta user={item.friend} style={{ marginTop: 2 }} />
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Chats</Text>
-        <Text style={styles.headerSubtitle}>Talk to your saathis at the exam center</Text>
+        <View style={styles.headerTextWrap}>
+          <Text style={styles.headerTitle}>Chats</Text>
+          <Text style={styles.headerSubtitle} numberOfLines={1}>
+            Talk to your saathis at the exam center
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.iconBtn}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('CreateGroup')}
+          accessibilityLabel="Create group"
+        >
+          <MaterialCommunityIcons name="account-plus" size={24} color={colors.white} />
+        </TouchableOpacity>
       </View>
 
       {threads === null ? (
         <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.primary} />
       ) : (
         <FlatList
-          data={threads}
-          keyExtractor={(item) => String(item.friend._id)}
+          data={items || []}
+          keyExtractor={(item) => item.key}
           renderItem={renderThread}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={{ paddingBottom: spacing.xl }}
@@ -150,6 +221,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     padding: spacing.xl,
     paddingBottom: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderBottomLeftRadius: radius.lg,
     borderBottomRightRadius: radius.lg,
     ...shadow,
@@ -186,6 +260,22 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  headerTextWrap: { flex: 1, flexShrink: 1, marginRight: spacing.md },
+  iconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  groupAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   name: { fontSize: 15, fontWeight: '700', color: colors.text, flexShrink: 1 },
   meta: { fontSize: 12, color: colors.textSecondary, marginTop: 1 },

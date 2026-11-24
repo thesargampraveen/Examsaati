@@ -70,6 +70,18 @@ export const api = {
   sendMessage: (friendId, text) =>
     request(`/api/chat/${friendId}`, { method: 'POST', body: { text } }),
 
+  // groups
+  getGroups: () => request('/api/groups'),
+  getGroup: (id) => request(`/api/groups/${id}`),
+  createGroup: (name, memberIds) =>
+    request('/api/groups', { method: 'POST', body: { name, memberIds } }),
+  getGroupMessages: (id) => request(`/api/groups/${id}/messages`),
+  sendGroupMessage: (id, text) =>
+    request(`/api/groups/${id}/messages`, { method: 'POST', body: { text } }),
+  addGroupMembers: (id, memberIds) =>
+    request(`/api/groups/${id}/members`, { method: 'POST', body: { memberIds } }),
+  leaveGroup: (id) => request(`/api/groups/${id}/leave`, { method: 'POST' }),
+
   // guide
   getGuideTips: (centerId) => request(`/api/guide/${centerId}`),
   addGuideTip: (centerId, category, text) =>

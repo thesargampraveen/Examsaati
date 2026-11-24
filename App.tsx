@@ -16,6 +16,7 @@ import StudentsScreen from './src/screens/StudentsScreen';
 import ChatsScreen from './src/screens/ChatsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ChatScreen from './src/screens/ChatScreen';
+import CreateGroupScreen from './src/screens/CreateGroupScreen';
 import CenterGuideScreen from './src/screens/CenterGuideScreen';
 import GuardianScreen from './src/screens/GuardianScreen';
 import EmergencyScreen from './src/screens/EmergencyScreen';
@@ -96,6 +97,11 @@ function RootNavigator() {
           <Stack.Screen
             name="Chat"
             component={ChatScreen}
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="CreateGroup"
+            component={CreateGroupScreen}
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen name="CenterGuide" component={CenterGuideScreen} />

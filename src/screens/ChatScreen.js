@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -12,44 +13,68 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors, radius, spacing, shadow, typography } from '../theme';
 import { Avatar } from '../components/ui';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import ReportBlockSheet from '../components/ReportBlockSheet';
 import ExamMeta from '../components/ExamMeta';
 
 export default function ChatScreen({ route, navigation }) {
   const friend = route.params?.friend;
+  const [group, setGroup] = useState(route.params?.group || null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [reportVisible, setReportVisible] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const { user } = useAuth();
   const listRef = useRef(null);
   const poll = useRef(null);
 
   const load = useCallback(async () => {
-    if (!friend) return;
     try {
-      const res = await api.getMessages(friend._id);
-      setMessages(res.messages || []);
+      if (group) {
+        const res = await api.getGroupMessages(group._id);
+        setMessages(res.messages || []);
+      } else if (friend) {
+        const res = await api.getMessages(friend._id);
+        setMessages(res.messages || []);
+      }
     } catch (err) {
       Alert.alert('Error', err.message);
       navigation.goBack();
     }
-  }, [friend, navigation]);
+  }, [friend, group, navigation]);
 
-  useEffect(() => {
-    load();
-    poll.current = setInterval(load, 4000);
-    return () => clearInterval(poll.current);
-  }, [load]);
+  const refreshGroup = useCallback(async () => {
+    if (!group) return;
+    try {
+      const res = await api.getGroup(group._id);
+      setGroup(res.group);
+    } catch {
+      // group may have been deleted if everyone left
+      navigation.goBack();
+    }
+  }, [group, navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+      refreshGroup();
+      poll.current = setInterval(load, 4000);
+      return () => clearInterval(poll.current);
+    }, [load, refreshGroup])
+  );
 
   const send = async () => {
     const t = text.trim();
     if (!t || sending) return;
     setSending(true);
     try {
-      await api.sendMessage(friend._id, t);
+      if (group) await api.sendGroupMessage(group._id, t);
+      else await api.sendMessage(friend._id, t);
       setText('');
       await load();
       setTimeout(() => listRef.current?.scrollToEnd?.({ animated: true }), 100);
@@ -60,7 +85,28 @@ export default function ChatScreen({ route, navigation }) {
     }
   };
 
-  if (!friend) return null;
+  const leave = async () => {
+    Alert.alert('Leave group', `Leave “${group?.name}”?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.leaveGroup(group._id);
+            setInfoVisible(false);
+            navigation.goBack();
+          } catch (err) {
+            Alert.alert('Error', err.message);
+          }
+        },
+      },
+    ]);
+  };
+
+  if (!friend && !group) return null;
+  const title = group ? group.name : friend?.name;
+  const subtitle = group ? `${group.members?.length || 0} members` : friend?.exam || '';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -68,15 +114,37 @@ export default function ChatScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} />
         </TouchableOpacity>
-        <Avatar name={friend.name} color={friend.avatarColor} size={38} />
-        <View style={{ flex: 1, marginLeft: spacing.md }}>
-          <Text style={styles.name}>{friend.name || 'Student'}</Text>
-          <Text style={styles.meta}>{friend.exam || ''}</Text>
-          <ExamMeta user={friend} light style={{ marginTop: 1 }} />
-        </View>
-        <TouchableOpacity onPress={() => setReportVisible(true)}>
-          <Text style={styles.reportLink}>Report</Text>
+        <TouchableOpacity
+          style={styles.headerMain}
+          activeOpacity={group ? 0.8 : 1}
+          onPress={group ? () => setInfoVisible(true) : undefined}
+          disabled={!group}
+        >
+          {group ? (
+            <View style={[styles.groupAvatar, { backgroundColor: group.avatarColor || colors.accent }]}>
+              <MaterialCommunityIcons name="account-group" size={20} color={colors.white} />
+            </View>
+          ) : (
+            <Avatar name={friend?.name} color={friend?.avatarColor} size={38} />
+          )}
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
+            <Text style={styles.name} numberOfLines={1}>{title || 'Student'}</Text>
+            <Text style={styles.meta} numberOfLines={1}>{subtitle}</Text>
+            {!group && <ExamMeta user={friend} light style={{ marginTop: 1 }} />}
+          </View>
         </TouchableOpacity>
+        {group ? (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CreateGroup', { group })}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <MaterialCommunityIcons name="account-plus" size={24} color={colors.white} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => setReportVisible(true)}>
+            <Text style={styles.reportLink}>Report</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <KeyboardAvoidingView
@@ -90,7 +158,9 @@ export default function ChatScreen({ route, navigation }) {
                 <MaterialCommunityIcons name="clover" size={26} color={colors.primary} />
               </View>
               <Text style={styles.emptyText}>
-                Start the conversation — wish them luck for {friend.exam || 'the exam'}! 🍀
+                {group
+                  ? `Start the conversation in “${group.name}” 🍀`
+                  : `Start the conversation — wish them luck for ${friend?.exam || 'the exam'}! 🍀`}
               </Text>
             </View>
           ) : null}
@@ -101,10 +171,19 @@ export default function ChatScreen({ route, navigation }) {
             onContentSizeChange={() => listRef.current?.scrollToEnd?.({ animated: false })}
             contentContainerStyle={{ padding: spacing.lg }}
             renderItem={({ item }) => {
-              const mine = item.sender !== friend._id;
+              if (item.system) {
+                return (
+                  <Text style={styles.systemMsg} numberOfLines={2}>{item.text}</Text>
+                );
+              }
+              const mine = group
+                ? (item.sender?._id || item.sender) === user?._id
+                : item.sender !== friend?._id;
+              const senderName = group && !mine ? item.sender?.name : null;
               return (
                 <View style={[styles.bubbleRow, mine && { justifyContent: 'flex-end' }]}>
                   <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
+                    {senderName && <Text style={styles.senderName}>{senderName}</Text>}
                     <Text style={mine ? styles.bubbleTextMine : styles.bubbleText}>{item.text}</Text>
                     <Text style={mine ? styles.timeMine : styles.time}>
                       {new Date(item.createdAt).toLocaleTimeString([], {
@@ -139,12 +218,71 @@ export default function ChatScreen({ route, navigation }) {
         </View>
       </KeyboardAvoidingView>
 
-      <ReportBlockSheet
-        visible={reportVisible}
-        targetUser={friend}
-        onClose={() => setReportVisible(false)}
-        onDone={() => navigation.goBack()}
-      />
+      {!group && (
+        <ReportBlockSheet
+          visible={reportVisible}
+          targetUser={friend}
+          onClose={() => setReportVisible(false)}
+          onDone={() => navigation.goBack()}
+        />
+      )}
+
+      {/* Group info: members + add students + leave */}
+      <Modal visible={infoVisible} animationType="slide" transparent>
+        <View style={styles.sheetWrap}>
+          <View style={styles.sheet}>
+            <View style={styles.sheetHeader}>
+              <View style={[styles.groupAvatar, { backgroundColor: group?.avatarColor || colors.accent }]}>
+                <MaterialCommunityIcons name="account-group" size={22} color={colors.white} />
+              </View>
+              <View style={{ flex: 1, marginLeft: spacing.md }}>
+                <Text style={styles.sheetTitle} numberOfLines={1}>{group?.name}</Text>
+                <Text style={styles.sheetSub}>{group?.members?.length || 0} members</Text>
+              </View>
+              <TouchableOpacity onPress={() => setInfoVisible(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <MaterialCommunityIcons name="close" size={24} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.addMembersBtn}
+              onPress={() => {
+                setInfoVisible(false);
+                navigation.navigate('CreateGroup', { group });
+              }}
+            >
+              <MaterialCommunityIcons name="account-plus" size={20} color={colors.primary} />
+              <Text style={styles.addMembersText}>Add students</Text>
+            </TouchableOpacity>
+
+            <FlatList
+              data={group?.members || []}
+              keyExtractor={(m) => String(m._id)}
+              contentContainerStyle={{ paddingBottom: spacing.lg }}
+              renderItem={({ item }) => (
+                <View style={styles.memberRow}>
+                  <Avatar name={item.name} color={item.avatarColor} size={40} />
+                  <View style={{ flex: 1, marginLeft: spacing.md }}>
+                    <Text style={styles.memberName} numberOfLines={1}>
+                      {item.name || 'Student'}
+                      {item._id === user?._id ? ' (you)' : ''}
+                    </Text>
+                    <ExamMeta user={item} style={{ marginTop: 1 }} />
+                  </View>
+                  {group?.admin && (group.admin._id || group.admin) === item._id && (
+                    <Text style={styles.adminTag}>Admin</Text>
+                  )}
+                </View>
+              )}
+            />
+
+            <TouchableOpacity style={styles.leaveBtn} onPress={leave}>
+              <MaterialCommunityIcons name="exit-to-app" size={20} color="#DC2626" />
+              <Text style={styles.leaveText}>Leave group</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -161,10 +299,18 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: radius.lg,
     ...shadow,
   },
+  headerMain: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   backBtn: {
     marginRight: spacing.sm,
     padding: spacing.xs,
     borderRadius: radius.full,
+  },
+  groupAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   name: { color: colors.white, fontWeight: '700', fontSize: 16 },
   meta: { color: colors.primaryLight, fontSize: 12, marginTop: 1 },
@@ -178,6 +324,20 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     overflow: 'hidden',
   },
+  systemMsg: {
+    alignSelf: 'center',
+    textAlign: 'center',
+    fontSize: 12,
+    color: colors.textMuted,
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    marginBottom: spacing.md,
+    marginHorizontal: spacing.xxl,
+    overflow: 'hidden',
+  },
+  senderName: { fontSize: 12, fontWeight: '800', color: colors.primary, marginBottom: 2 },
   bubbleRow: { flexDirection: 'row', marginBottom: spacing.sm, paddingHorizontal: 2 },
   bubble: {
     maxWidth: '78%',
@@ -246,4 +406,55 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   emptyText: { ...typography.secondary, textAlign: 'center', maxWidth: 260 },
+  sheetWrap: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
+  sheet: {
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    maxHeight: '85%',
+    paddingBottom: spacing.lg,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  sheetTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
+  sheetSub: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
+  addMembersBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  addMembersText: { fontSize: 15, fontWeight: '700', color: colors.primary },
+  memberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
+  },
+  memberName: { fontSize: 15, fontWeight: '700', color: colors.text },
+  adminTag: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.primary,
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  leaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+  },
+  leaveText: { fontSize: 15, fontWeight: '700', color: '#DC2626' },
 });
