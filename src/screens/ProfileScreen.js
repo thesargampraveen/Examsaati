@@ -90,6 +90,21 @@ export default function ProfileScreen({ navigation }) {
           />
         </Card>
 
+        <TouchableOpacity
+          style={styles.emergencyCard}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Emergency')}
+        >
+          <View style={styles.emergencyIcon}>
+            <MaterialCommunityIcons name="phone-alert" size={26} color={colors.white} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.emergencyTitle}>Emergency Numbers</Text>
+            <Text style={styles.emergencySub}>Police · Ambulance · Fire & more — one tap to call</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={colors.white} />
+        </TouchableOpacity>
+
         <Card style={{ marginTop: spacing.lg }}>
           <Text style={styles.sectionTitle}>Blocked students ({blocked.length})</Text>
           {blocked.length === 0 ? (
@@ -154,6 +169,24 @@ const styles = StyleSheet.create({
   blockedName: { fontSize: 14, color: colors.text },
   unblock: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   muted: { ...typography.muted },
+  emergencyCard: {
+    marginTop: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.danger,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+  },
+  emergencyIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emergencyTitle: { color: colors.white, fontSize: 15, fontWeight: '800', marginLeft: spacing.md },
+  emergencySub: { color: 'rgba(255,255,255,0.85)', fontSize: 12, marginLeft: spacing.md, marginTop: 2 },
   signOut: {
     marginTop: spacing.xl,
     alignItems: 'center',

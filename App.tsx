@@ -18,6 +18,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import CenterGuideScreen from './src/screens/CenterGuideScreen';
 import GuardianScreen from './src/screens/GuardianScreen';
+import EmergencyScreen from './src/screens/EmergencyScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -102,6 +103,11 @@ function RootNavigator() {
             name="Guardian"
             component={GuardianScreen}
             options={{ presentation: 'modal' }}
+          />
+          <Stack.Screen
+            name="Emergency"
+            component={EmergencyScreen}
+            options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
             name="Students"
