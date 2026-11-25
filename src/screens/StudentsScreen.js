@@ -116,7 +116,7 @@ export default function StudentsScreen({ navigation }) {
             : 'Select your center in profile setup'}
         </Text>
         <Text style={styles.headerNote}>
-          Showing only students with the same exam AND same center
+          Showing only students with the same exam, same date AND same center
         </Text>
       </View>
 
@@ -127,8 +127,8 @@ export default function StudentsScreen({ navigation }) {
           <MaterialCommunityIcons name="account-group" size={48} color={colors.textMuted} style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>No matching students yet</Text>
           <Text style={styles.emptyText}>
-            Only students with the same exam AND same exam center appear here. As more of
-            them join, they will show up in this list.
+            Only students with the same exam, same date AND same exam center appear here.
+            As more of them join, they will show up in this list.
           </Text>
         </View>
       ) : (
